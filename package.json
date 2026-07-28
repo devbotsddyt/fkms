@@ -1,0 +1,23 @@
+{
+  "name": "ddos-attack",
+  "version": "1.0.0",
+  "description": "DDoS Attack Scripts",
+  "main": "pidoras.js",
+  "scripts": {
+    "start": "node pidoras.js"
+  },
+  "dependencies": {
+    "net": "latest",
+    "http2": "latest",
+    "tls": "latest",
+    "cluster": "latest",
+    "url": "latest",
+    "crypto": "latest",
+    "fs": "latest",
+    "os": "latest",
+    "colors": "^1.4.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
